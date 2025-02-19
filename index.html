@@ -1,83 +1,123 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小宇的日记</title>
+    <title>膀胱训练计划</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #cce7ff;
-            color: #333;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #007bff;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin: 10px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-        }
+        body { font-family: Arial, sans-serif; background-color: #d0e8ff; text-align: center; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        h1 { color: #005baa; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .box { display: block; background-color: #69bff8; color: white; text-decoration: none; padding: 20px; border-radius: 8px; font-size: 18px; }
+        .box:hover { background-color: #3a91d8; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; border: none; cursor: pointer; border-radius: 5px; }
+        .task-list { text-align: left; margin-top: 20px; }
+        .task-list li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>每日心情</h2>
-        <input type="date" id="date">
-        <textarea id="mood" placeholder="今天感觉如何？"></textarea>
-        <button onclick="saveMood()">保存</button>
-        
-        <h2>写作进度</h2>
-        <textarea id="writing" placeholder="今天写了多少？"></textarea>
-        <button onclick="saveWriting()">保存</button>
+        <h1>膀胱训练计划</h1>
+        <div class="grid">
+            <a href="#" onclick="showPage('tasks')" class="box">每日任务</a>
+            <a href="#" onclick="showPage('points')" class="box">积分系统</a>
+            <a href="#" onclick="showPage('toilet')" class="box">如厕申请</a>
+            <a href="#" onclick="showPage('punishments')" class="box">惩罚与奖励</a>
+        </div>
 
-        <h2>如厕任务</h2>
-        <button onclick="logToilet()">完成一次</button>
-        <p id="toilet-log"></p>
+        <div id="tasks" style="display:none;">
+            <h2>每日任务</h2>
+            <ul class="task-list">
+                <li><button onclick="completeTask(10)">揉膀胱5分钟 (+10分)</button></li>
+                <li><button onclick="completeTask(15)">按压膀胱10次 (+15分)</button></li>
+                <li><button onclick="completeTask(20)">多喝500ml水 (+20分)</button></li>
+                <li><button onclick="completeTask(-10)">未完成任务 (-10分)</button></li>
+                <li><button onclick="completeTask(25)">坐立5分钟不动 (+25分)</button></li>
+                <li><button onclick="completeTask(-20)">偷懒一次 (-20分)</button></li>
+                <li><button onclick="completeTask(30)">保持尿意30分钟 (+30分)</button></li>
+                <li><button onclick="completeTask(35)">上厕所前深蹲20次 (+35分)</button></li>
+                <li><button onclick="completeTask(50)">忍尿1小时 (+50分)</button></li>
+                <li><button onclick="completeTask(-30)">申请失败一次 (-30分)</button></li>
+            </ul>
+        </div>
 
-        <h2>学习情况</h2>
-        <textarea id="study" placeholder="今天学了什么？"></textarea>
-        <button onclick="saveStudy()">保存</button>
+        <div id="points" style="display:none;">
+            <h2>积分系统</h2>
+            <p>当前积分: <span id="points-value">0</span></p>
+        </div>
+
+        <div id="toilet" style="display:none;">
+            <h2>如厕申请</h2>
+            <p>剩余如厕次数: <span id="toiletCount">3</span></p>
+            <button onclick="applyToilet()">申请如厕</button>
+            <p id="toiletStatus"></p>
+        </div>
+
+        <div id="punishments" style="display:none;">
+            <h2>惩罚与奖励</h2>
+            <button onclick="randomPunishment()">随机任务</button>
+            <p id="punishmentResult"></p>
+        </div>
     </div>
 
     <script>
-        function saveMood() {
-            localStorage.setItem("mood-" + document.getElementById("date").value, document.getElementById("mood").value);
-            alert("心情已保存！");
+        let points = localStorage.getItem('points') ? parseInt(localStorage.getItem('points')) : 0;
+        let toiletCount = localStorage.getItem('toiletCount') ? parseInt(localStorage.getItem('toiletCount')) : 3;
+        const punishments = [
+            "按压膀胱30秒",
+            "深蹲50次",
+            "跳绳100次",
+            "保持尿意15分钟",
+            "揉小腹2分钟",
+            "站立不动10分钟",
+            "连续写小说500字",
+            "手撑膀胱不动1分钟",
+            "喝300ml水",
+            "闭眼冥想5分钟"
+        ];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("points-value").innerText = points;
+            document.getElementById("toiletCount").innerText = toiletCount;
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.container > div').forEach(div => {
+                if (div.id !== "tasks" && div.id !== "points" && div.id !== "toilet" && div.id !== "punishments") return;
+                div.style.display = (div.id === pageId) ? "block" : "none";
+            });
         }
 
-        function saveWriting() {
-            localStorage.setItem("writing", document.getElementById("writing").value);
-            alert("写作进度已保存！");
+        function completeTask(amount) {
+            points += amount;
+            localStorage.setItem('points', points);
+            document.getElementById("points-value").innerText = points;
+            alert("任务完成，积分变化: " + amount);
         }
 
-        function logToilet() {
-            let count = localStorage.getItem("toilet") || 0;
-            count++;
-            localStorage.setItem("toilet", count);
-            document.getElementById("toilet-log").innerText = "已完成：" + count + " 次";
+        function applyToilet() {
+            if (points < 50) {
+                document.getElementById("toiletStatus").innerText = "积分不足50，无法申请！";
+                return;
+            }
+            points -= 50;
+            localStorage.setItem('points', points);
+            document.getElementById("points-value").innerText = points;
+
+            if (toiletCount > 0) {
+                toiletCount--;
+                localStorage.setItem('toiletCount', toiletCount);
+                document.getElementById("toiletCount").innerText = toiletCount;
+                document.getElementById("toiletStatus").innerText = "如厕申请通过！";
+            } else {
+                document.getElementById("toiletStatus").innerText = "今日如厕次数已达上限！";
+            }
         }
 
-        function saveStudy() {
-            localStorage.setItem("study", document.getElementById("study").value);
-            alert("学习情况已保存！");
+        function randomPunishment() {
+            const punishment = punishments[Math.floor(Math.random() * punishments.length)];
+            document.getElementById("punishmentResult").innerText = "随机任务: " + punishment;
         }
     </script>
 </body>
