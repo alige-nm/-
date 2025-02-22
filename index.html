@@ -14,6 +14,7 @@
         button { padding: 10px 20px; font-size: 16px; margin: 5px; border: none; cursor: pointer; border-radius: 5px; }
         .task-list { text-align: left; margin-top: 20px; }
         .task-list li { margin-bottom: 10px; }
+        textarea { width: 80%; height: 100px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -24,6 +25,9 @@
             <a href="#" onclick="showPage('points')" class="box">积分系统</a>
             <a href="#" onclick="showPage('toilet')" class="box">如厕申请</a>
             <a href="#" onclick="showPage('punishments')" class="box">惩罚与奖励</a>
+            <a href="#" onclick="showPage('notes')" class="box">便签</a>
+            <a href="#" onclick="showPage('plan')" class="box">每日计划</a>
+            <a href="#" onclick="showPage('pet')" class="box">养宠</a>
         </div>
 
         <div id="tasks" style="display:none;">
@@ -59,32 +63,60 @@
             <button onclick="randomPunishment()">随机任务</button>
             <p id="punishmentResult"></p>
         </div>
+
+        <div id="notes" style="display:none;">
+            <h2>便签</h2>
+            <textarea id="notes-text" placeholder="写下你的便签..."></textarea><br>
+            <button onclick="saveNotes()">保存便签</button>
+            <h3>过往便签</h3>
+            <div id="saved-notes"></div>
+        </div>
+
+        <div id="plan" style="display:none;">
+            <h2>每日计划</h2>
+            <textarea id="plan-text" placeholder="记录你的每日计划..."></textarea><br>
+            <button onclick="savePlan()">保存计划</button>
+            <h3>过往计划</h3>
+            <div id="saved-plan"></div>
+        </div>
+
+        <div id="pet" style="display:none;">
+            <h2>养宠</h2>
+            <p>宠物状态：</p>
+            <p>睡觉状态: <span id="petSleep">未睡觉</span></p>
+            <p>如厕状态: <span id="petToilet">未如厕</span></p>
+            <p>宠物好感度: <span id="petAffection">50</span></p>
+            <button onclick="petSleep()">让宠物睡觉</button>
+            <button onclick="petToilet()">让宠物如厕</button>
+            <button onclick="feedPet()">喂食</button>
+            <button onclick="giveWaterToPet()">喂水</button>
+        </div>
     </div>
 
     <script>
         let points = localStorage.getItem('points') ? parseInt(localStorage.getItem('points')) : 0;
         let toiletCount = localStorage.getItem('toiletCount') ? parseInt(localStorage.getItem('toiletCount')) : 3;
-        const punishments = [
-            "按压膀胱30秒",
-            "深蹲50次",
-            "跳绳100次",
-            "保持尿意15分钟",
-            "揉小腹2分钟",
-            "站立不动10分钟",
-            "连续写小说500字",
-            "手撑膀胱不动1分钟",
-            "喝300ml水",
-            "闭眼冥想5分钟"
-        ];
+        let petSleepStatus = localStorage.getItem('petSleepStatus') || "未睡觉";
+        let petToiletStatus = localStorage.getItem('petToiletStatus') || "未如厕";
+        let petAffection = localStorage.getItem('petAffection') ? parseInt(localStorage.getItem('petAffection')) : 50;
+        let taskCompleted = false;
+        let planCompleted = false;
+        let notesCompleted = false;
 
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("points-value").innerText = points;
             document.getElementById("toiletCount").innerText = toiletCount;
+            document.getElementById("petSleep").innerText = petSleepStatus;
+            document.getElementById("petToilet").innerText = petToiletStatus;
+            document.getElementById("petAffection").innerText = petAffection;
+
+            // Display past notes and plans
+            displayPastNotes();
+            displayPastPlans();
         });
 
         function showPage(pageId) {
             document.querySelectorAll('.container > div').forEach(div => {
-                if (div.id !== "tasks" && div.id !== "points" && div.id !== "toilet" && div.id !== "punishments") return;
                 div.style.display = (div.id === pageId) ? "block" : "none";
             });
         }
@@ -93,14 +125,31 @@
             points += amount;
             localStorage.setItem('points', points);
             document.getElementById("points-value").innerText = points;
+            taskCompleted = true;
             alert("任务完成，积分变化: " + amount);
         }
 
         function applyToilet() {
+            if (!planCompleted) {
+                document.getElementById("toiletStatus").innerText = "每日计划未完成，无法申请如厕！";
+                return;
+            }
+
+            if (petAffection < 40) {
+                document.getElementById("toiletStatus").innerText = "宠物不高兴，无法如厕！";
+                return;
+            }
+
+            if (petSleepStatus !== "已睡觉" || petToiletStatus !== "已如厕") {
+                document.getElementById("toiletStatus").innerText = "宠物未准备好，无法如厕！";
+                return;
+            }
+
             if (points < 50) {
                 document.getElementById("toiletStatus").innerText = "积分不足50，无法申请！";
                 return;
             }
+
             points -= 50;
             localStorage.setItem('points', points);
             document.getElementById("points-value").innerText = points;
@@ -116,9 +165,51 @@
         }
 
         function randomPunishment() {
+            const punishments = [
+                "按压膀胱30秒",
+                "深蹲50次",
+                "跳绳100次",
+                "保持尿意15分钟",
+                "揉小腹2分钟",
+                "站立不动10分钟",
+                "连续写小说500字",
+                "手撑膀胱不动1分钟",
+                "喝300ml水",
+                "闭眼冥想5分钟"
+            ];
             const punishment = punishments[Math.floor(Math.random() * punishments.length)];
             document.getElementById("punishmentResult").innerText = "随机任务: " + punishment;
         }
-    </script>
-</body>
-</html>
+
+        function saveNotes() {
+            const notes = document.getElementById("notes-text").value;
+            localStorage.setItem('notes', notes);
+            displayPastNotes();
+        }
+
+        function displayPastNotes() {
+            const notes = localStorage.getItem('notes');
+            document.getElementById("saved-notes").innerText = notes || "没有保存的便签";
+        }
+
+        function savePlan() {
+            const plan = document.getElementById("plan-text").value;
+            localStorage.setItem('plan', plan);
+            displayPastPlans();
+        }
+
+        function displayPastPlans() {
+            const plan = localStorage.getItem('plan');
+            document.getElementById("saved-plan").innerText = plan || "没有保存的计划";
+        }
+
+        function petSleep() {
+            petSleepStatus = "已睡觉";
+            localStorage.setItem('petSleepStatus', petSleepStatus);
+            document.getElementById("petSleep").innerText = petSleepStatus;
+        }
+
+        function petToilet() {
+            petToiletStatus = "已如厕";
+            localStorage.setItem('petToiletStatus', petToiletStatus);
+            document.getElementById
