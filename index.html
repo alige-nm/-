@@ -116,9 +116,15 @@
         });
 
         function showPage(pageId) {
+            // Hide all pages
             document.querySelectorAll('.container > div').forEach(div => {
-                div.style.display = (div.id === pageId) ? "block" : "none";
+                div.style.display = "none";
             });
+            // Show the selected page
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.style.display = "block";
+            }
         }
 
         function completeTask(amount) {
@@ -158,58 +164,4 @@
                 toiletCount--;
                 localStorage.setItem('toiletCount', toiletCount);
                 document.getElementById("toiletCount").innerText = toiletCount;
-                document.getElementById("toiletStatus").innerText = "如厕申请通过！";
-            } else {
-                document.getElementById("toiletStatus").innerText = "今日如厕次数已达上限！";
-            }
-        }
-
-        function randomPunishment() {
-            const punishments = [
-                "按压膀胱30秒",
-                "深蹲50次",
-                "跳绳100次",
-                "保持尿意15分钟",
-                "揉小腹2分钟",
-                "站立不动10分钟",
-                "连续写小说500字",
-                "手撑膀胱不动1分钟",
-                "喝300ml水",
-                "闭眼冥想5分钟"
-            ];
-            const punishment = punishments[Math.floor(Math.random() * punishments.length)];
-            document.getElementById("punishmentResult").innerText = "随机任务: " + punishment;
-        }
-
-        function saveNotes() {
-            const notes = document.getElementById("notes-text").value;
-            localStorage.setItem('notes', notes);
-            displayPastNotes();
-        }
-
-        function displayPastNotes() {
-            const notes = localStorage.getItem('notes');
-            document.getElementById("saved-notes").innerText = notes || "没有保存的便签";
-        }
-
-        function savePlan() {
-            const plan = document.getElementById("plan-text").value;
-            localStorage.setItem('plan', plan);
-            displayPastPlans();
-        }
-
-        function displayPastPlans() {
-            const plan = localStorage.getItem('plan');
-            document.getElementById("saved-plan").innerText = plan || "没有保存的计划";
-        }
-
-        function petSleep() {
-            petSleepStatus = "已睡觉";
-            localStorage.setItem('petSleepStatus', petSleepStatus);
-            document.getElementById("petSleep").innerText = petSleepStatus;
-        }
-
-        function petToilet() {
-            petToiletStatus = "已如厕";
-            localStorage.setItem('petToiletStatus', petToiletStatus);
-            document.getElementById
+                document.getElementById("toiletStatus").yId
